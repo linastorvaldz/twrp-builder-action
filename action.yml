@@ -13,6 +13,7 @@ inputs:
   FOX_SYNC_BRANCH:
     description: 'Manifest Branch'
     type: string
+    default: '12.1'
   USER_NAME:
     description: 'Your GitHub username'
     type: string
@@ -41,7 +42,7 @@ inputs:
     description: 'Specify your device codename'
     type: string
   BUILD_TARGET:
-    description: 'Specify Your Build Target'
+    description: 'Specify Your Build Target [boot,recovery,vendorboot]'
     type: string
   COMMON_TREE:
     description: 'Your device common tree (if exists)'
@@ -61,6 +62,10 @@ inputs:
   TG_TOKEN:
     description: 'Telegram Bot Token'
     type: string
+  TIMEZONE:
+    description: 'Specify Your Timezone'
+    type: string
+    default: 'Asia/Makassar'
 
 runs:
   using: 'composite'
@@ -86,8 +91,10 @@ runs:
         sudo apt-get install -y aria2
         git clone --depth=1 https://gitlab.com/OrangeFox/misc/scripts.git -b master .sc
         sudo bash .sc/setup/android_build_env.sh
+        sleep 1
+        sudo timedatectl set-timezone "${{ inputs.TIMEZONE }}"
 
-    - name: 🎡 Set-up Manifest Sync
+    - name: 🎡 Sync OrangeFox Manifest
       shell: bash
       env:
         TG_CHAT_ID: ${{ inputs.TG_CHAT_ID }}
@@ -160,7 +167,7 @@ runs:
             ${{ inputs.DEVICE_PATH }}
         fi
 
-    - name: 🦊 Building OrangeFox
+    - name: 🦊 Build OrangeFox Recovery
       shell: bash
       env:
         TG_CHAT_ID: ${{ inputs.TG_CHAT_ID }}
@@ -189,8 +196,8 @@ runs:
         retVal=$?
         timeEnd
         buildStatus
-
-        EV1=$(TZ=$TZ date +%Y%m%d-%H%M)
+        
+        EV1=$(date -d "$DATE" +"%Y%m%d-%H%M")
         EV2=$DEVICE
         EV3=$(ls -lh ./out/target/product/$CODENAME/OrangeFox*.zip | cut -d ' ' -f5)
         EV4=$(ls -lh ./out/target/product/$CODENAME/OrangeFox*.img | cut -d ' ' -f5)
@@ -208,11 +215,18 @@ runs:
         export ORF_IMG_MD5=${EV7}
         export ORF_IMG_SHA1=${EV8}
         export ORF_GHREPO="https://github.com/${{ github.repository }}"
-        export ORF_TAG=${{ github.run_id }}
+        export ORF_TAG="${{ github.run_id }}"
         export ORF_TIME=${EV10}
 
         sleep 2
         ORF_FILES=$(realpath ./out/target/product/$CODENAME/{OrangeFox*.zip,OrangeFox*.img})
+        echo "$ORF_FILES"
         bash notes.sh
-        gh release create "$ORF_TAG" "$ORF_FILES" --title "🦊 OrangeFox Recovery for ${DEVICE} (${CODENAME}) // ${BUILD_DATE}" -F ${GITHUB_ACTION_PATH}/release-notes.md -R "${{ github.repository }}"
+        gh release create \
+        "$ORF_TAG" \
+        "$ORF_FILES" \
+        --title "🦊 OrangeFox Recovery for ${DEVICE} (${CODENAME}) // ${BUILD_DATE}" \
+        -F "${GITHUB_ACTION_PATH}/release-notes.md" \
+        -R "${{ github.repository }}"
+        sleep 1
         post_message

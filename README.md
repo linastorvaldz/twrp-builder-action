@@ -5,7 +5,7 @@
 - First, configure the workflow file according to the following example:
 
 ```yml
-name: OrangeFox - Builder
+name: OrangeFox Build
 
 on:
   workflow_dispatch:
@@ -14,8 +14,6 @@ jobs:
   build:
     name: 🦊 Build OrangeFox Recovery
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -30,9 +28,11 @@ jobs:
         DEVICE_PATH: '' # Path to the device tree
         DEVICE_NAME: '' # Device codename
         BUILD_TARGET: '' # Build Target [boot,recovery,vendorboot]
-        TG_CHAT_ID: '${{ secrets.TG_CHAT_ID }}' # Chat ID secret
+        TG_CHAT_ID: '${{ secrets.TG_CHAT_ID }}' # Telegram Chat ID secret
         TG_TOKEN: '${{ secrets.TG_TOKEN }}' # Telegram bot token secret
-        MAINTAINER_URL: '' # Maintainer picture (this is not necessary)
+        TIMEZONE: '' # Your timezone
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
 ```
 
 - Finally, run the workflow you just wrote.

@@ -2,11 +2,9 @@
 
 echo "## OrangeFox Recovery Build - Unofficial
 📜 Fox Manifest: ${FOX_BRANCH}
-📱 Device: ${DEVICE} | ${CODENAME}
+📱 Device: ${DEVICE} (${CODENAME})
 📂 ZIP Size: ${ORF_ZIP_SIZE}
 📂 Image Size: ${ORF_IMG_SIZE}
-👩‍💻 Top Commit: 
-\`${DT_COMMIT}\`
 
 📕 ZIP MD5: \`${ORF_ZIP_MD5}\`
 📘 ZIP SHA1: \`${ORF_ZIP_SHA1}\`

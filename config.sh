@@ -5,12 +5,11 @@
 #########################
 # Variables and Functions
 #########################
-TZ=Asia/Makassar
 DISTRO=$(source /etc/os-release && echo "${PRETTY_NAME}")
 
 timeStart() {
     BUILD_START=$(date +"%s")
-    DATE=$(TZ=$TZ date)
+    DATE=$(date)
 }
 
 timeEnd() {
@@ -82,7 +81,7 @@ build_message() {
         CI_MESSAGE_ID=$(
             tg_send_message --chat_id "$TG_CHAT_ID" --parse_mode "html" --text "<b>=== 🦊 OrangeFox Recovery Builder ===</b>
 <b>📜 Fox Manifest :</b> ${FOX_BRANCH}
-<b>📱 Device :</b> ${DEVICE} | ${CODENAME}
+<b>📱 Device :</b> ${DEVICE} (${CODENAME})
 <b>📟 Jobs :</b> $(nproc --all)
 <b>🗃 Storage :</b> $(df -h . | tail -n 1 | awk '{print $2}')
 <b>📈 Used :</b> $(df -h . | tail -n 1 | awk '{print $3}')
@@ -95,7 +94,7 @@ build_message() {
     else
         tg_edit_message_text --chat_id "$TG_CHAT_ID" --message_id "$CI_MESSAGE_ID" --parse_mode "html" --text "<b>=== 🦊 OrangeFox Recovery Builder ===</b>
 <b>📜 Fox Manifest :</b> ${FOX_BRANCH}
-<b>📱 Device :</b> ${DEVICE} | ${CODENAME}
+<b>📱 Device :</b> ${DEVICE} (${CODENAME})
 <b>📟 Jobs :</b> $(nproc --all)
 <b>🗃 Storage :</b> $(df -h . | tail -n 1 | awk '{print $2}')
 <b>📈 Used :</b> $(df -h . | tail -n 1 | awk '{print $3}')
@@ -110,7 +109,7 @@ build_message() {
 post_message() {
     tg_send_message --chat_id "$TG_CHAT_ID" --parse_mode "html" --reply_to_message_id "$CI_MESSAGE_ID" --text "<b>=== ✅ Build Completed ===</b>
 
-<b>📱 Device :</b> ${DEVICE} | ${CODENAME}
+<b>📱 Device :</b> ${DEVICE} (${CODENAME})
 <b>📜 Fox Manifest :</b> ${FOX_BRANCH}
 <b>📂 ZIP Size :</b> ${ORF_ZIP_SIZE}
 <b>📂 Image Size :</b> ${ORF_IMG_SIZE}
@@ -126,9 +125,9 @@ post_message() {
 buildStatus() {
     if [[ $retVal -ne 0 ]]; then
         build_message " ❌ Build Aborted after $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds."
+        sleep 1
         tg_send_document --chat_id "$TG_CHAT_ID" --document "$BUILDLOG" --reply_to_message_id "$CI_MESSAGE_ID"
         exit $retVal
     fi
     build_message "Build success ✅"
-    exit 0
 }
