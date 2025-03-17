@@ -171,6 +171,7 @@ runs:
         BUILD_TARGET: ${{ inputs.BUILD_TARGET }}
         GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: |
+        set +e
         source config.sh
         timeStart
 
