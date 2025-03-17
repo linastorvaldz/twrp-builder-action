@@ -52,7 +52,7 @@ inputs:
   COMMON_PATH:
     description: 'Path to your common device tree'
     type: string
-  MAINTAINER_LINK:
+  MAINTAINER_URL:
     description: 'Image size must be 192x192'
     type: string
   TG_CHAT_ID:
@@ -83,10 +83,9 @@ runs:
     - name: 🏢 Build Environment
       shell: bash
       run: |
-        sudo apt-get install -y apt-utils aria2 figlet
-        git clone https://github.com/akhilnarang/scripts.git -b master .sc
+        sudo apt-get install -y aria2
+        git clone --depth=1 https://gitlab.com/OrangeFox/misc/scripts.git -b master .sc
         sudo bash .sc/setup/android_build_env.sh
-        sudo apt-get install -y python3-all-dev libtinfo6 libncurses6 libncurses-dev libncurses5-dev lsb-release lsb-base
 
     - name: 🎡 Set-up Manifest Sync
       shell: bash
@@ -96,52 +95,69 @@ runs:
         GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: |
         source config.sh
-        echo -e ${cya} "Sync OrangeFox Recovery..."
-        mkdir -p ${GITHUB_ACTION_PATH}/OrangeFox && cd ${GITHUB_ACTION_PATH}/OrangeFox
+
+        mkdir -p ${GITHUB_ACTION_PATH}/OrangeFox
+        cd ${GITHUB_ACTION_PATH}/OrangeFox
         git config --global user.name "${{ inputs.USER_NAME }}"
         git config --global user.email "${{ inputs.USER_EMAIL }}"
-        echo "${GITHUB_TOKEN}" >> ikitoken.txt
-        unset GITHUB_TOKEN
-        gh auth login --with-token < ikitoken.txt
-        git clone https://gitlab.com/OrangeFox/sync.git
-        ./sync/orangefox_sync.sh --branch ${{ inputs.FOX_SYNC_BRANCH }} --path ${GITHUB_ACTION_PATH}/OrangeFox/fox_${{ inputs.FOX_SYNC_BRANCH }}
+
+        git clone --depth=1 https://gitlab.com/OrangeFox/sync.git
+        cd sync
+        ./orangefox_sync.sh \
+        --branch ${{ inputs.FOX_SYNC_BRANCH }} \
+        --path ${GITHUB_ACTION_PATH}/OrangeFox/fox_${{ inputs.FOX_SYNC_BRANCH }}
+        cd -
+
         cd ${GITHUB_ACTION_PATH}/OrangeFox/fox_${{ inputs.FOX_SYNC_BRANCH }}
         if [[ ! -d bootable/recovery/gui/theme ]]; then
-            echo -e ${cya} "Adding Theme..."
-            git clone https://gitlab.com/OrangeFox/misc/theme.git bootable/recovery/gui/theme
+            git clone --depth=1 \
+            https://gitlab.com/OrangeFox/misc/theme.git \
+            bootable/recovery/gui/theme
         fi
         if [[ ! -d external/nano ]]; then
-            echo -e ${cya} "Adding Nano Library..."
-            git clone https://github.com/LineageOS/android_external_nano -b lineage-19.1 external/nano
+            git clone --depth=1 \
+            https://github.com/LineageOS/android_external_nano \
+            -b lineage-19.1 \
+            external/nano
         fi
         if [[ ! -d external/libncurses ]]; then
-            echo -e ${cya} "Adding libncurses Library..."
-            git clone https://github.com/LineageOS/android_external_libncurses -b lineage-19.1 external/libncurses
+            git clone --depth=1 \
+            https://github.com/LineageOS/android_external_libncurses \
+            -b lineage-19.1 \
+            external/libncurses
         fi
         if [[ ! -d external/bash ]]; then
-            echo -e ${cya} "Adding Bash Library..."
-            git clone https://github.com/LineageOS/android_external_bash -b lineage-19.1 external/bash
+            git clone --depth=1 \
+            https://github.com/LineageOS/android_external_bash \
+            -b lineage-19.1 \
+            external/bash
         fi
         if [[ ! -d external/lptools ]]; then
-            echo -e ${cya} "Adding lptools Library..."
-            git clone https://github.com/phhusson/vendor_lptools external/lptools
+            git clone --depth=1 \
+            https://github.com/phhusson/vendor_lptools \
+            external/lptools
         fi
-        if [[ ! -z "${{ inputs.MAINTAINER_URL }}" ]]; then
-            echo -e ${cya} "Changing Maintainer Profile..."
-            wget ${{ inputs.MAINTAINER_URL }} -O ${GITHUB_ACTION_PATH}/maintainer.png
+        if [[ -n "${{ inputs.MAINTAINER_URL }}" ]]; then
+            wget -q ${{ inputs.MAINTAINER_URL }} -O ${GITHUB_ACTION_PATH}/maintainer.png
             cp -r ${GITHUB_ACTION_PATH}/maintainer.png bootable/recovery/gui/theme/portrait_hdpi/images/Default/About
         fi
-        if [[ ! -z "${{ inputs.KERNEL_TREE }}" ]]; then
-            echo -e ${cya} "Clonning Kernel Tree..."
-            git clone ${{ inputs.KERNEL_TREE }} -b ${{ inputs.KERNEL_BRANCH }} ${{ inputs.KERNEL_PATH }}
+        if [[ -n "${{ inputs.KERNEL_TREE }}" ]]; then
+            git clone --depth=1 \
+            ${{ inputs.KERNEL_TREE }} \
+            -b ${{ inputs.KERNEL_BRANCH }} \
+            ${{ inputs.KERNEL_PATH }}
         fi
-        if [[ ! -z "${{ inputs.COMMON_TREE }}" ]]; then
-            echo -e ${cya} "Clonning Common Tree..."
-            git clone ${{ inputs.COMMON_TREE }} -b ${{ inputs.COMMON_BRANCH }} ${{ inputs.COMMON_PATH }}
+        if [[ -n "${{ inputs.COMMON_TREE }}" ]]; then
+            git clone --depth=1 \
+            ${{ inputs.COMMON_TREE }} \
+            -b ${{ inputs.COMMON_BRANCH }} \
+            ${{ inputs.COMMON_PATH }}
         fi
-        if [[ ! -z "${{ inputs.DEVICE_TREE }}" ]]; then
-            echo -e ${cya} "Clonning Device Tree..."
-            git clone ${{ inputs.DEVICE_TREE }} -b ${{ inputs.DEVICE_TREE_BRANCH }} ${{ inputs.DEVICE_PATH }}
+        if [[ -n "${{ inputs.DEVICE_TREE }}" ]]; then
+            git clone --depth=1 \
+            ${{ inputs.DEVICE_TREE }} \
+            -b ${{ inputs.DEVICE_TREE_BRANCH }} \
+            ${{ inputs.DEVICE_PATH }}
         fi
 
     - name: 🦊 Building OrangeFox
@@ -151,22 +167,19 @@ runs:
         TG_TOKEN: ${{ inputs.TG_TOKEN }}
         FOX_BRANCH: ${{ inputs.FOX_SYNC_BRANCH }}
         CODENAME: ${{ inputs.DEVICE_NAME }}
-        GITHUB_ACTION_PATH: ${{ github.action_path }}
         DEVICE_PATH: ${{ inputs.DEVICE_PATH }}
         BUILD_TARGET: ${{ inputs.BUILD_TARGET }}
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: |
-        set +e
         source config.sh
         timeStart
+
         cd ${GITHUB_ACTION_PATH}/OrangeFox/fox_$FOX_BRANCH
-        echo -e ${cya} "##########################################"
-        echo -e ${cya} "$(figlet "OrageFox")"
-        echo -e ${cya} "##########################################"
         source build/envsetup.sh
         export ALLOW_MISSING_DEPENDENCIES=true
         BUILDLOG=$(realpath ./build.log)
         DEVICE=$(grep "PRODUCT_MODEL :=" ./$DEVICE_PATH/twrp_$CODENAME.mk -m 1 | cut -d = -f 2)
-        set -e
+
         lunch twrp_$CODENAME-eng
         sleep 5
         build_message "Building... 🛠️"
@@ -174,8 +187,9 @@ runs:
         tee -a ${BUILDLOG} < reading & progress & mka adbd ${BUILD_TARGET}image -j$(nproc --all) > reading
         retVal=$?
         timeEnd
-        statusBuild
-        EV1=$(TZ=$TZ date +%Y%m%d)
+        buildStatus
+
+        EV1=$(TZ=$TZ date +%Y%m%d-%H%M)
         EV2=$DEVICE
         EV3=$(ls -lh ./out/target/product/$CODENAME/OrangeFox*.zip | cut -d ' ' -f5)
         EV4=$(ls -lh ./out/target/product/$CODENAME/OrangeFox*.img | cut -d ' ' -f5)
@@ -183,8 +197,7 @@ runs:
         EV6=$(sha1sum ./out/target/product/$CODENAME/OrangeFox*.zip | cut -d ' ' -f1)
         EV7=$(md5sum ./out/target/product/$CODENAME/OrangeFox*.img | cut -d ' ' -f1)
         EV8=$(sha1sum ./out/target/product/$CODENAME/OrangeFox*.img | cut -d ' ' -f1)
-        EV9=$(cd $DEVICE_PATH && git log --pretty=format:'%s' -1 && cd -)
-        EV10=$(grep "#### build completed successfully" $BUILD_LOG -m 1 | cut -d '(' -f 2)
+        EV10=$(grep "#### build completed successfully" $BUILDLOG -m 1 | cut -d '(' -f 2)
         export BUILD_DATE=${EV1}
         export DEVICE=${EV2}
         export ORF_ZIP_SIZE=${EV3}
@@ -193,12 +206,12 @@ runs:
         export ORF_ZIP_SHA1=${EV6}
         export ORF_IMG_MD5=${EV7}
         export ORF_IMG_SHA1=${EV8}
-        export DT_COMMIT=${EV9}
         export ORF_GHREPO="https://github.com/${{ github.repository }}"
         export ORF_TAG=${{ github.run_id }}
         export ORF_TIME=${EV10}
-        
+
+        sleep 2
         ORF_FILES=$(realpath ./out/target/product/$CODENAME/{OrangeFox*.zip,OrangeFox*.img})
         bash notes.sh
-        gh release create "$ORF_TAG" "$ORF_FILES" --title "🦊 OrangeFox Recovery for ${DEVICE} (${CODENAME}) // ${BUILD_DATE}" -F ${GITHUB_ACTION_PATH}/release-notes.md -R "$ORF_GHREPO"
+        gh release create "$ORF_TAG" "$ORF_FILES" --title "🦊 OrangeFox Recovery for ${DEVICE} (${CODENAME}) // ${BUILD_DATE}" -F ${GITHUB_ACTION_PATH}/release-notes.md -R "${{ github.repository }}"
         post_message
