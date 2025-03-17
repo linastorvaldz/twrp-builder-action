@@ -182,12 +182,12 @@ runs:
         timeStart
 
         cd ${GITHUB_ACTION_PATH}/OrangeFox/fox_$FOX_BRANCH
+        set +e
         source build/envsetup.sh
         export ALLOW_MISSING_DEPENDENCIES=true
         BUILDLOG=./build.log
         DEVICE=$(grep "PRODUCT_MODEL :=" ./$DEVICE_PATH/twrp_$CODENAME.mk -m 1 | cut -d = -f 2)
 
-        set +e
         lunch twrp_$CODENAME-eng
         sleep 5
         build_message "Building... 🛠️"
