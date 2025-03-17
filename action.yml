@@ -178,29 +178,29 @@ runs:
         BUILD_TARGET: ${{ inputs.BUILD_TARGET }}
         GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: |
-        set +e
         source config.sh
         timeStart
 
         cd ${GITHUB_ACTION_PATH}/OrangeFox/fox_$FOX_BRANCH
         source build/envsetup.sh
         export ALLOW_MISSING_DEPENDENCIES=true
-        BUILDLOG=$(realpath ./build.log)
+        BUILDLOG=./build.log
         DEVICE=$(grep "PRODUCT_MODEL :=" ./$DEVICE_PATH/twrp_$CODENAME.mk -m 1 | cut -d = -f 2)
 
+        set +e
         lunch twrp_$CODENAME-eng
         sleep 5
         build_message "Building... 🛠️"
-        mkfifo -m 644 reading
-        tee -a ${BUILDLOG} < reading & progress & mka adbd ${BUILD_TARGET}image -j$(nproc --all) > reading
-        retVal=$?
+        mka adbd ${BUILD_TARGET}image -j$(nproc --all) 2>&1 | tee -a ${BUILDLOG}
+        retVal=${PIPESTATUS[0]}
         timeEnd
         buildStatus
-        
+
+        set -e
         EV1=$(date -d "$DATE" +"%Y%m%d-%H%M")
         EV2=$DEVICE
-        EV3=$(ls -lh ./out/target/product/$CODENAME/OrangeFox*.zip | cut -d ' ' -f5)
-        EV4=$(ls -lh ./out/target/product/$CODENAME/OrangeFox*.img | cut -d ' ' -f5)
+        EV3=$(du -h ./out/target/product/$CODENAME/OrangeFox*.zip | awk '{print $1}')
+        EV4=$(du -h ./out/target/product/$CODENAME/OrangeFox*.img | awk '{print $1}')
         EV5=$(md5sum ./out/target/product/$CODENAME/OrangeFox*.zip | cut -d ' ' -f1)
         EV6=$(sha1sum ./out/target/product/$CODENAME/OrangeFox*.zip | cut -d ' ' -f1)
         EV7=$(md5sum ./out/target/product/$CODENAME/OrangeFox*.img | cut -d ' ' -f1)
@@ -219,14 +219,14 @@ runs:
         export ORF_TIME=${EV10}
 
         sleep 2
-        ORF_FILES=$(realpath ./out/target/product/$CODENAME/{OrangeFox*.zip,OrangeFox*.img})
-        echo "$ORF_FILES"
+        ORF_FILES=$(echo ./out/target/product/$CODENAME/{OrangeFox*.zip,OrangeFox*.img})
+        echo "ORF_FILES: $ORF_FILES"
         bash notes.sh
         gh release create \
-        "$ORF_TAG" \
-        "$ORF_FILES" \
-        --title "🦊 OrangeFox Recovery for ${DEVICE} (${CODENAME}) // ${BUILD_DATE}" \
-        -F "${GITHUB_ACTION_PATH}/release-notes.md" \
-        -R "${{ github.repository }}"
+            "$ORF_TAG" \
+            "$ORF_FILES" \
+            --title "🦊 OrangeFox Recovery for ${DEVICE} (${CODENAME}) // ${BUILD_DATE}" \
+            -F "${GITHUB_ACTION_PATH}/release-notes.md" \
+            -R "${{ github.repository }}"
         sleep 1
         post_message
