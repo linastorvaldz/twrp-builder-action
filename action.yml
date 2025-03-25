@@ -71,22 +71,21 @@ runs:
   using: 'composite'
   steps:
 
-    - name: 🗑️ Clean-up
+    - name: Cleanup
       uses: rokibhasansagar/slimhub_actions@main
 
-    - name: 💽 Swap Space
+    - name: Set swap space
       uses: pierotofy/set-swap-space@master
       with:
         swap-size-gb: 12
 
-    - name: 🎡 Set GitHub Path
-      run: echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH
-      shell: bash
+    - name: Set GitHub Path
+      run: |
+        echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH
       env:
         GITHUB_ACTION_PATH: ${{ github.action_path }}
 
-    - name: 🏢 Build Environment
-      shell: bash
+    - name: Prepare Build Environment
       run: |
         sudo apt-get install -y aria2
         git clone --depth=1 https://gitlab.com/OrangeFox/misc/scripts.git -b master .sc
@@ -94,15 +93,10 @@ runs:
         sleep 1
         sudo timedatectl set-timezone "${{ inputs.TIMEZONE }}"
 
-    - name: 🎡 Sync OrangeFox Manifest
-      shell: bash
+    - name: Sync OrangeFox Manifest
       env:
-        TG_CHAT_ID: ${{ inputs.TG_CHAT_ID }}
-        TG_TOKEN: ${{ inputs.TG_TOKEN }}
         GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: |
-        source config.sh
-
         mkdir -p ${GITHUB_ACTION_PATH}/OrangeFox
         cd ${GITHUB_ACTION_PATH}/OrangeFox
         git config --global user.name "${{ inputs.USER_NAME }}"
@@ -168,7 +162,6 @@ runs:
         fi
 
     - name: 🦊 Build OrangeFox Recovery
-      shell: bash
       env:
         TG_CHAT_ID: ${{ inputs.TG_CHAT_ID }}
         TG_TOKEN: ${{ inputs.TG_TOKEN }}
@@ -178,55 +171,43 @@ runs:
         BUILD_TARGET: ${{ inputs.BUILD_TARGET }}
         GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: |
-        source config.sh
+        source functions.sh
         timeStart
 
-        cd ${GITHUB_ACTION_PATH}/OrangeFox/fox_$FOX_BRANCH
-        set +e
+        cd ${GITHUB_ACTION_PATH}/OrangeFox/fox_${FOX_BRANCH}
         source build/envsetup.sh
         export ALLOW_MISSING_DEPENDENCIES=true
-        BUILDLOG=./build.log
-        DEVICE=$(grep "PRODUCT_MODEL :=" ./$DEVICE_PATH/twrp_$CODENAME.mk -m 1 | cut -d = -f 2)
+
+        export BUILDLOG=$(realpath ./build.log)
+        export OUT=$(realpath ./out/target/product/$CODENAME)
+        export DEVICE=$(grep "PRODUCT_MODEL :=" ./$DEVICE_PATH/twrp_$CODENAME.mk -m 1 | cut -d = -f 2)
 
         lunch twrp_$CODENAME-eng
         sleep 5
         build_message "Building... 🛠️"
         mka adbd ${BUILD_TARGET}image -j$(nproc --all) 2>&1 | tee -a ${BUILDLOG}
-        retVal=${PIPESTATUS[0]}
+        export retVal=${PIPESTATUS[0]}
         timeEnd
         buildStatus
 
-        set -e
-        EV1=$(date -d "$DATE" +"%Y%m%d-%H%M")
-        EV2=$DEVICE
-        EV3=$(du -h ./out/target/product/$CODENAME/OrangeFox*.zip | awk '{print $1}')
-        EV4=$(du -h ./out/target/product/$CODENAME/OrangeFox*.img | awk '{print $1}')
-        EV5=$(md5sum ./out/target/product/$CODENAME/OrangeFox*.zip | cut -d ' ' -f1)
-        EV6=$(sha1sum ./out/target/product/$CODENAME/OrangeFox*.zip | cut -d ' ' -f1)
-        EV7=$(md5sum ./out/target/product/$CODENAME/OrangeFox*.img | cut -d ' ' -f1)
-        EV8=$(sha1sum ./out/target/product/$CODENAME/OrangeFox*.img | cut -d ' ' -f1)
-        EV10=$(grep "#### build completed successfully" $BUILDLOG -m 1 | cut -d '(' -f 2)
-        export BUILD_DATE=${EV1}
-        export DEVICE=${EV2}
-        export ORF_ZIP_SIZE=${EV3}
-        export ORF_IMG_SIZE=${EV4}
-        export ORF_ZIP_MD5=${EV5}
-        export ORF_ZIP_SHA1=${EV6}
-        export ORF_IMG_MD5=${EV7}
-        export ORF_IMG_SHA1=${EV8}
+        export ORF_IMG_SHA1=$(sha1sum $OUT/OrangeFox*.img | cut -d ' ' -f1)
+        export ORF_ZIP_SHA1=$(sha1sum $OUT/OrangeFox*.zip | cut -d ' ' -f1)
+        export ORF_ZIP_NAME=$(basename $OUT/OrangeFox*.zip)
+        export ORF_IMG_NAME=$(basename $OUT/OrangeFox*.img)
         export ORF_GHREPO="https://github.com/${{ github.repository }}"
-        export ORF_TAG="${{ github.run_id }}"
-        export ORF_TIME=${EV10}
+        export ORF_LINK="${ORF_GHREPO}/releases/tag/${BUILD_DATE}"
 
         sleep 2
-        ORF_FILES=$(echo ./out/target/product/$CODENAME/{OrangeFox*.zip,OrangeFox*.img})
+        ORF_FILES=$(echo $OUT/{OrangeFox*.zip,OrangeFox*.img})
         echo "ORF_FILES: $ORF_FILES"
+        sed -i "s/ZIP_NAME/${ORF_ZIP_NAME}/g" notes.sh
+        sed -i "s/IMG_NAME/${ORF_IMG_NAME}/g" notes.sh
         bash notes.sh
         gh release create \
-            "$ORF_TAG" \
+            "$BUILD_DATE" \
             "$ORF_FILES" \
-            --title "🦊 OrangeFox Recovery for ${DEVICE} (${CODENAME}) // ${BUILD_DATE}" \
+            --title "🦊 OFRP for ${DEVICE} (${CODENAME}) // ${BUILD_DATE}" \
             -F "${GITHUB_ACTION_PATH}/release-notes.md" \
             -R "${{ github.repository }}"
         sleep 1
-        post_message
+        build_success_msg "$ORF_LINK"

@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 
-echo "## OrangeFox Recovery Build - Unofficial
-📜 Fox Manifest: ${FOX_BRANCH}
+echo "## OFRP Build - Unofficial
+🦊 Fox Branch: ${FOX_BRANCH}
 📱 Device: ${DEVICE} (${CODENAME})
-📂 ZIP Size: ${ORF_ZIP_SIZE}
-📂 Image Size: ${ORF_IMG_SIZE}
 
-📕 ZIP MD5: \`${ORF_ZIP_MD5}\`
-📘 ZIP SHA1: \`${ORF_ZIP_SHA1}\`
-📕 Image MD5: \`${ORF_IMG_MD5}\`
-📘 Image SHA1: \`${ORF_IMG_SHA1}\`" >>${GITHUB_ACTION_PATH}/release-notes.md
+#### 🧐 Checksum
+- ZIP_NAME SHA1: \`${ORF_ZIP_SHA1}\`
+- IMG_NAME SHA1: \`${ORF_IMG_SHA1}\`" >>${GITHUB_ACTION_PATH}/release-notes.md
