@@ -72,7 +72,7 @@ runs:
   steps:
 
     - name: Cleanup
-      uses: rokibhasansagar/slimhub_actions@main
+      uses: mehyaa/slimhub_actions@fix/toolset-url
 
     - name: Set swap space
       uses: pierotofy/set-swap-space@master
