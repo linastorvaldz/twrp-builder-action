@@ -80,12 +80,14 @@ runs:
         swap-size-gb: 12
 
     - name: Set GitHub Path
+      shell: bash
       run: |
         echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH
       env:
         GITHUB_ACTION_PATH: ${{ github.action_path }}
 
     - name: Prepare Build Environment
+      shell: bash
       run: |
         sudo apt-get install -y aria2
         git clone --depth=1 https://gitlab.com/OrangeFox/misc/scripts.git -b master .sc
@@ -94,6 +96,7 @@ runs:
         sudo timedatectl set-timezone "${{ inputs.TIMEZONE }}"
 
     - name: Sync OrangeFox Manifest
+      shell: bash
       env:
         GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: |
@@ -162,6 +165,7 @@ runs:
         fi
 
     - name: 🦊 Build OrangeFox Recovery
+      shell: bash
       env:
         TG_CHAT_ID: ${{ inputs.TG_CHAT_ID }}
         TG_TOKEN: ${{ inputs.TG_TOKEN }}
