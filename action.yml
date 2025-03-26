@@ -179,8 +179,9 @@ runs:
         timeStart
 
         cd ${GITHUB_ACTION_PATH}/OrangeFox/fox_${FOX_BRANCH}
+        set +e
         source build/envsetup.sh
-        export ALLOW_MISSING_DEPENDENCIES=true
+        set -e
 
         export BUILDLOG=$(realpath ./build.log)
         export OUT=$(realpath ./out/target/product/$CODENAME)
@@ -215,3 +216,4 @@ runs:
             -R "${{ github.repository }}"
         sleep 1
         build_success_msg "$ORF_LINK"
+
