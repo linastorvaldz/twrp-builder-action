@@ -204,10 +204,7 @@ runs:
 
         sleep 2
         ORF_FILES=$(echo $OUT/{OrangeFox*.zip,OrangeFox*.img})
-        echo "ORF_FILES: $ORF_FILES"
-        sed -i "s/ZIP_NAME/${ORF_ZIP_NAME}/g" notes.sh
-        sed -i "s/IMG_NAME/${ORF_IMG_NAME}/g" notes.sh
-        bash notes.sh
+        create_release_notes
         gh release create \
             "$BUILD_DATE" \
             "$ORF_FILES" \
@@ -215,5 +212,5 @@ runs:
             -F "${GITHUB_ACTION_PATH}/release-notes.md" \
             -R "${{ github.repository }}"
         sleep 1
-        build_success_msg "$ORF_LINK"
+        build_success_msg
 

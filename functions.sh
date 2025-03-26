@@ -97,9 +97,8 @@ build_message() {
 }
 
 build_success_msg() {
-    local LINK="$1"
     tg_send_message --chat_id "$TG_CHAT_ID" --parse_mode "markdown" --reply_to_message_id "$CI_MESSAGE_ID" --text "*=== ✅ Build Succeeded ===*
-📦 Download: [here](${LINK})"
+📦 Download: [here](${ORF_LINK})"
 }
 
 buildStatus() {
@@ -110,4 +109,14 @@ buildStatus() {
         exit $retVal
     fi
     build_message "Build success ✅"
+}
+
+create_release_notes() {
+    echo "## OFRP Build - Unofficial
+🦊 Fox Branch: ${FOX_BRANCH}
+📱 Device: ${DEVICE} (${CODENAME})
+
+#### 🧐 Checksum
+- $ORF_ZIP_NAME SHA1: \`${ORF_ZIP_SHA1}\`
+- $ORF_IMG_NAME SHA1: \`${ORF_IMG_SHA1}\`" >${GITHUB_ACTION_PATH}/release-notes.md
 }
