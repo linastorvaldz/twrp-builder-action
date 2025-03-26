@@ -207,7 +207,7 @@ runs:
         create_release_notes
         gh release create \
             "$BUILD_DATE" \
-            "$ORF_FILES" \
+            $ORF_FILES \
             --title "🦊 OFRP for ${DEVICE} (${CODENAME}) // ${BUILD_DATE}" \
             -F "${GITHUB_ACTION_PATH}/release-notes.md" \
             -R "${{ github.repository }}"
