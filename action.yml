@@ -105,7 +105,7 @@ runs:
         git config --global user.name "${{ inputs.USER_NAME }}"
         git config --global user.email "${{ inputs.USER_EMAIL }}"
 
-        git clone --depth=1 https://github.com/linastorvaldz/orangefox_sync sync
+        git clone --depth=1 https://gitlab.com/OrangeFox/sync.git
         cd sync
         ./orangefox_sync.sh \
         --branch ${{ inputs.FOX_SYNC_BRANCH }} \
@@ -213,3 +213,4 @@ runs:
             -R "${{ github.repository }}"
         sleep 1
         build_success_msg
+
