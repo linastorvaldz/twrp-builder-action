@@ -2,9 +2,9 @@
 # Copyright (c) https://github.com/UWU-TEAM 2025-present
 # Copyright (c) https://github.com/linastorvaldz 2025-present
 
-#######
+############
 # Functions
-#######
+############
 
 timeStart() {
     export BUILD_START=$(date +"%s")
@@ -79,18 +79,18 @@ tg_send_photo() {
 build_message() {
     if [[ -z $CI_MESSAGE_ID ]]; then
         CI_MESSAGE_ID=$(
-            tg_send_message --chat_id "$TG_CHAT_ID" --parse_mode "markdown" --text "*=== 🦊 OFRP Builder ===*
-*🦊 Fox Branch :* ${FOX_BRANCH}
-*📱 Device :* ${DEVICE} (${CODENAME})
-*📅 Date :* $DATE
+            tg_send_message --chat_id "$TG_CHAT_ID" --parse_mode "markdown" --text "*=== TWRP Builder ===*
+*TWRP Branch :* twrp-${TWRP_BRANCH}
+*Device :* ${DEVICE} (${CODENAME})
+*Date :* $DATE
 
 *⚙️ Status :* ${1}" | jq -r .result.message_id
         )
     else
-        tg_edit_message_text --chat_id "$TG_CHAT_ID" --message_id "$CI_MESSAGE_ID" --parse_mode "markdown" --text "*=== 🦊 OFRP Builder ===*
-*🦊 Fox Branch :* ${FOX_BRANCH}
-*📱 Device :* ${DEVICE} (${CODENAME})
-*📅 Date :* $DATE
+        tg_edit_message_text --chat_id "$TG_CHAT_ID" --message_id "$CI_MESSAGE_ID" --parse_mode "markdown" --text "*=== TWRP Builder ===*
+*TWRP Branch :* twrp-${TWRP_BRANCH}
+*Device :* ${DEVICE} (${CODENAME})
+*Date :* $DATE
 
 *⚙️ Status :* ${1}"
     fi
@@ -98,7 +98,7 @@ build_message() {
 
 build_success_msg() {
     tg_send_message --chat_id "$TG_CHAT_ID" --parse_mode "markdown" --reply_to_message_id "$CI_MESSAGE_ID" --text "*=== ✅ Build Succeeded ===*
-📦 Download: [here](${ORF_LINK})"
+📦 Download: [here](${LINK})"
 }
 
 buildStatus() {
@@ -112,11 +112,10 @@ buildStatus() {
 }
 
 create_release_notes() {
-    echo "## OFRP Build - Unofficial
-🦊 Fox Branch: ${FOX_BRANCH}
-📱 Device: ${DEVICE} (${CODENAME})
+    echo "## TWRP Build - Unofficial
+TWRP Branch: ${TWRP_BRANCH}
+Device: ${DEVICE} (${CODENAME})
 
-#### 🧐 Checksum
-- $ORF_ZIP_NAME SHA1: \`${ORF_ZIP_SHA1}\`
-- $ORF_IMG_NAME SHA1: \`${ORF_IMG_SHA1}\`" >${GITHUB_ACTION_PATH}/release-notes.md
+- SHA1: \`${SHA1}\`
+- MD5: \`${MD5}\`" >${GITHUB_ACTION_PATH}/release-notes.md
 }

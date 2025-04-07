@@ -1,8 +1,8 @@
 # Copyright (c) https://github.com/UWU-TEAM 2025-present
 # Copyright (c) https://github.com/linastorvaldz 2025-present
 
-name: "🦊 Orangefox Recovery Builder"
-description: "Build OrangeFox Recovery with Github Action"
+name: "TeamWin Recovery Builder"
+description: "Build TWRP with Github Action"
 author: "linastorvaldz"
 
 branding:
@@ -10,7 +10,7 @@ branding:
   color: 'yellow'
 
 inputs:
-  FOX_SYNC_BRANCH:
+  TWRP_SYNC_BRANCH:
     description: 'Manifest Branch'
     type: string
     default: '12.1'
@@ -95,52 +95,20 @@ runs:
         sleep 1
         sudo timedatectl set-timezone "${{ inputs.TIMEZONE }}"
 
-    - name: Sync OrangeFox Manifest
+    - name: Sync TWRP Manifest
       shell: bash
       env:
         GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: |
-        mkdir -p ${GITHUB_ACTION_PATH}/OrangeFox
-        cd ${GITHUB_ACTION_PATH}/OrangeFox
+        mkdir -p ${GITHUB_ACTION_PATH}/TWRP
+        cd ${GITHUB_ACTION_PATH}/TWRP
+
         git config --global user.name "${{ inputs.USER_NAME }}"
         git config --global user.email "${{ inputs.USER_EMAIL }}"
 
-        git clone --depth=1 https://gitlab.com/OrangeFox/sync.git
-        cd sync
-        ./orangefox_sync.sh \
-        --branch ${{ inputs.FOX_SYNC_BRANCH }} \
-        --path ${GITHUB_ACTION_PATH}/OrangeFox/fox_${{ inputs.FOX_SYNC_BRANCH }}
-        cd -
+        repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-${{ inputs.TWRP_SYNC_BRANCH }}
+        repo sync -j$(nproc --all) --force-sync
 
-        cd ${GITHUB_ACTION_PATH}/OrangeFox/fox_${{ inputs.FOX_SYNC_BRANCH }}
-        if [[ ! -d bootable/recovery/gui/theme ]]; then
-            git clone --depth=1 \
-            https://gitlab.com/OrangeFox/misc/theme.git \
-            bootable/recovery/gui/theme
-        fi
-        if [[ ! -d external/nano ]]; then
-            git clone --depth=1 \
-            https://github.com/LineageOS/android_external_nano \
-            -b lineage-19.1 \
-            external/nano
-        fi
-        if [[ ! -d external/libncurses ]]; then
-            git clone --depth=1 \
-            https://github.com/LineageOS/android_external_libncurses \
-            -b lineage-19.1 \
-            external/libncurses
-        fi
-        if [[ ! -d external/bash ]]; then
-            git clone --depth=1 \
-            https://github.com/LineageOS/android_external_bash \
-            -b lineage-19.1 \
-            external/bash
-        fi
-        if [[ ! -d external/lptools ]]; then
-            git clone --depth=1 \
-            https://github.com/phhusson/vendor_lptools \
-            external/lptools
-        fi
         if [[ -n "${{ inputs.MAINTAINER_URL }}" ]]; then
             wget -q ${{ inputs.MAINTAINER_URL }} -O ${GITHUB_ACTION_PATH}/maintainer.png
             cp -r ${GITHUB_ACTION_PATH}/maintainer.png bootable/recovery/gui/theme/portrait_hdpi/images/Default/About
@@ -164,12 +132,12 @@ runs:
             ${{ inputs.DEVICE_PATH }}
         fi
 
-    - name: 🦊 Build OrangeFox Recovery
+    - name: Build TeamWin Recovery
       shell: bash
       env:
         TG_CHAT_ID: ${{ inputs.TG_CHAT_ID }}
         TG_TOKEN: ${{ inputs.TG_TOKEN }}
-        FOX_BRANCH: ${{ inputs.FOX_SYNC_BRANCH }}
+        TWRP_BRANCH: ${{ inputs.TWRP_SYNC__BRANCH }}
         CODENAME: ${{ inputs.DEVICE_NAME }}
         DEVICE_PATH: ${{ inputs.DEVICE_PATH }}
         BUILD_TARGET: ${{ inputs.BUILD_TARGET }}
@@ -178,7 +146,7 @@ runs:
         source functions.sh
         timeStart
 
-        cd ${GITHUB_ACTION_PATH}/OrangeFox/fox_${FOX_BRANCH}
+        cd ${GITHUB_ACTION_PATH}/TWRP
         set +e
         source build/envsetup.sh
         set -e
@@ -195,22 +163,17 @@ runs:
         timeEnd
         buildStatus
 
-        export ORF_IMG_SHA1=$(sha1sum $OUT/OrangeFox*.img | cut -d ' ' -f1)
-        export ORF_ZIP_SHA1=$(sha1sum $OUT/OrangeFox*.zip | cut -d ' ' -f1)
-        export ORF_ZIP_NAME=$(basename $OUT/OrangeFox*.zip)
-        export ORF_IMG_NAME=$(basename $OUT/OrangeFox*.img)
-        export ORF_GHREPO="https://github.com/${{ github.repository }}"
-        export ORF_LINK="${ORF_GHREPO}/releases/tag/${BUILD_DATE}"
+        export SHA1=$(sha1sum $OUT/*.img | cut -d ' ' -f1)
+        export MD5=$(md5sum $OUT/*.img | cut -d ' ' -f1)
+        export ORF_LINK="https://github.com/${{ github.repository }}/releases/tag/${BUILD_DATE}"
 
         sleep 2
-        ORF_FILES=$(echo $OUT/{OrangeFox*.zip,OrangeFox*.img})
         create_release_notes
         gh release create \
             "$BUILD_DATE" \
-            $ORF_FILES \
-            --title "🦊 OFRP for ${DEVICE} (${CODENAME}) // ${BUILD_DATE}" \
+            $OUT/*.img \
+            --title "TWRP for ${DEVICE} (${CODENAME}) // ${BUILD_DATE}" \
             -F "${GITHUB_ACTION_PATH}/release-notes.md" \
             -R "${{ github.repository }}"
         sleep 1
         build_success_msg
-

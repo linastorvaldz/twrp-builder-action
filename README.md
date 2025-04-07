@@ -1,5 +1,2 @@
-# OrangeFox Builder Action
-🦊 Build OrangeFox recovery with Github Action!
-
-## How to use?
-- You can follow my configuration: [here](https://github.com/linastorvaldz/ofox-build)
+# TeamWin Recovery Builder Action
+Build TeamWin Recovery with Github Action!
