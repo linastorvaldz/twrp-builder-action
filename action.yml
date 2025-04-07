@@ -137,7 +137,7 @@ runs:
       env:
         TG_CHAT_ID: ${{ inputs.TG_CHAT_ID }}
         TG_TOKEN: ${{ inputs.TG_TOKEN }}
-        TWRP_BRANCH: ${{ inputs.TWRP_SYNC__BRANCH }}
+        TWRP_BRANCH: ${{ inputs.TWRP_SYNC_BRANCH }}
         CODENAME: ${{ inputs.DEVICE_NAME }}
         DEVICE_PATH: ${{ inputs.DEVICE_PATH }}
         BUILD_TARGET: ${{ inputs.BUILD_TARGET }}
