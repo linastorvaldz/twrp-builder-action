@@ -89,8 +89,7 @@ runs:
     - name: Prepare Build Environment
       shell: bash
       run: |
-        sudo apt-get install -y aria2
-        git clone --depth=1 https://gitlab.com/OrangeFox/misc/scripts.git -b master .sc
+        git clone --depth=1 https://github.com/akhilnarang/scripts -b master .sc
         sudo bash .sc/setup/android_build_env.sh
         sleep 1
         sudo timedatectl set-timezone "${{ inputs.TIMEZONE }}"
