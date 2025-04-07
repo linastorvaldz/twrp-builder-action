@@ -165,7 +165,7 @@ runs:
 
         export SHA1=$(sha1sum $OUT/*.img | cut -d ' ' -f1)
         export MD5=$(md5sum $OUT/*.img | cut -d ' ' -f1)
-        export ORF_LINK="https://github.com/${{ github.repository }}/releases/tag/${BUILD_DATE}"
+        export LINK="https://github.com/${{ github.repository }}/releases/tag/${BUILD_DATE}"
 
         sleep 2
         create_release_notes
