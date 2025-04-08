@@ -42,7 +42,7 @@ inputs:
     description: 'Specify your device codename'
     type: string
   BUILD_TARGET:
-    description: 'Specify Your Build Target [boot,recovery,vendorboot]'
+    description: 'Specify Your Build Target [boot,recovery,vendor_boot]'
     type: string
   COMMON_TREE:
     description: 'Your device common tree (if exists)'
@@ -163,20 +163,21 @@ runs:
         lunch twrp_$CODENAME-eng
         sleep 5
         build_message "Building... 🛠️"
-        mka adbd ${BUILD_TARGET}image -j$(nproc --all) 2>&1 | tee -a ${BUILDLOG}
+        _BUILD_TARGET=$(echo "$BUILD_TARGET" | tr -d '_')
+        mka adbd ${_BUILD_TARGET}image -j$(nproc --all) 2>&1 | tee -a ${BUILDLOG}
         export retVal=${PIPESTATUS[0]}
         timeEnd
         buildStatus
 
-        export SHA1=$(sha1sum $OUT/*.img | cut -d ' ' -f1)
-        export MD5=$(md5sum $OUT/*.img | cut -d ' ' -f1)
+        export SHA1=$(sha1sum $OUT/$BUILD_TARGET.img | cut -d ' ' -f1)
+        export MD5=$(md5sum $OUT/$BUILD_TARGET.img | cut -d ' ' -f1)
         export LINK="https://github.com/${{ github.repository }}/releases/tag/${BUILD_DATE}"
 
         sleep 2
         create_release_notes
         gh release create \
             "$BUILD_DATE" \
-            $OUT/*.img \
+            $OUT/$BUILD_TARGET.img \
             --title "TWRP for ${DEVICE} (${CODENAME}) // ${BUILD_DATE}" \
             -F "${GITHUB_ACTION_PATH}/release-notes.md" \
             -R "${{ github.repository }}"
