@@ -23,6 +23,9 @@ inputs:
   DEVICE_PATH:
     description: 'Path to device tree'
     type: string
+  DEVICE_CODENAME:
+    description: 'Device codename'
+    type: string
   BUILD_TARGET:
     description: 'Specify Your Build Target [boot,recovery,vendor_boot]'
     type: string
@@ -92,6 +95,7 @@ runs:
         TG_TOKEN: ${{ inputs.TG_TOKEN }}
         TWRP_BRANCH: ${{ inputs.TWRP_SYNC_BRANCH }}
         DEVICE_PATH: ${{ inputs.DEVICE_PATH }}
+        CODENAME: ${{ inputs.DEVICE_CODENAME }}
         BUILD_TARGET: ${{ inputs.BUILD_TARGET }}
         GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: |
@@ -103,7 +107,6 @@ runs:
         source build/envsetup.sh
 
         export DEVICE=$(grep "PRODUCT_MODEL :=" ./$DEVICE_PATH/twrp_$CODENAME.mk -m 1 | cut -d = -f 2)
-        export CODENAME=$(grep "PRODUCT_DEVICE :=" ./$DEVICE_PATH/twrp_$CODENAME.mk -m 1 | cut -d = -f 2)
         export BUILD_LOG=$(realpath ./build.log)
         export OUT=$(realpath ./out/target/product/$CODENAME)
 
