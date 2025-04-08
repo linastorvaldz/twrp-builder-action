@@ -14,21 +14,6 @@ inputs:
     description: 'Manifest Branch'
     type: string
     default: '12.1'
-  USER_NAME:
-    description: 'Your GitHub username'
-    type: string
-  USER_EMAIL:
-    description: 'Your GitHub email'
-    type: string
-  KERNEL_TREE:
-    description: 'Your device kernel tree'
-    type: string
-  KERNEL_BRANCH:
-    description: 'Kernel tree branch'
-    type: string
-  KERNEL_PATH:
-    description: 'Path to kernel directory'
-    type: string
   DEVICE_TREE:
     description: 'Device tree repository'
     type: string
@@ -38,23 +23,8 @@ inputs:
   DEVICE_PATH:
     description: 'Path to device tree'
     type: string
-  DEVICE_NAME:
-    description: 'Specify your device codename'
-    type: string
   BUILD_TARGET:
     description: 'Specify Your Build Target [boot,recovery,vendor_boot]'
-    type: string
-  COMMON_TREE:
-    description: 'Your device common tree (if exists)'
-    type: string
-  COMMON_BRANCH:
-    description: 'Your device common tree branch'
-    type: string
-  COMMON_PATH:
-    description: 'Path to your common device tree'
-    type: string
-  MAINTAINER_URL:
-    description: 'Image size must be 192x192'
     type: string
   TG_CHAT_ID:
     description: 'Telegram Chat ID'
@@ -108,28 +78,12 @@ runs:
         mkdir -p ${GITHUB_ACTION_PATH}/TWRP
         cd ${GITHUB_ACTION_PATH}/TWRP
 
-        git config --global user.name "${{ inputs.USER_NAME }}"
-        git config --global user.email "${{ inputs.USER_EMAIL }}"
+        git config --global user.name "${{ github.actor }}"
+        git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
 
         repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-${{ inputs.TWRP_SYNC_BRANCH }}
         repo sync -j$(nproc --all) --force-sync
 
-        if [[ -n "${{ inputs.MAINTAINER_URL }}" ]]; then
-            wget -q ${{ inputs.MAINTAINER_URL }} -O ${GITHUB_ACTION_PATH}/maintainer.png
-            cp -r ${GITHUB_ACTION_PATH}/maintainer.png bootable/recovery/gui/theme/portrait_hdpi/images/Default/About
-        fi
-        if [[ -n "${{ inputs.KERNEL_TREE }}" ]]; then
-            git clone --depth=1 \
-            ${{ inputs.KERNEL_TREE }} \
-            -b ${{ inputs.KERNEL_BRANCH }} \
-            ${{ inputs.KERNEL_PATH }}
-        fi
-        if [[ -n "${{ inputs.COMMON_TREE }}" ]]; then
-            git clone --depth=1 \
-            ${{ inputs.COMMON_TREE }} \
-            -b ${{ inputs.COMMON_BRANCH }} \
-            ${{ inputs.COMMON_PATH }}
-        fi
         if [[ -n "${{ inputs.DEVICE_TREE }}" ]]; then
             git clone --depth=1 \
             ${{ inputs.DEVICE_TREE }} \
@@ -143,7 +97,6 @@ runs:
         TG_CHAT_ID: ${{ inputs.TG_CHAT_ID }}
         TG_TOKEN: ${{ inputs.TG_TOKEN }}
         TWRP_BRANCH: ${{ inputs.TWRP_SYNC_BRANCH }}
-        CODENAME: ${{ inputs.DEVICE_NAME }}
         DEVICE_PATH: ${{ inputs.DEVICE_PATH }}
         BUILD_TARGET: ${{ inputs.BUILD_TARGET }}
         GITHUB_ACTION_PATH: ${{ github.action_path }}
@@ -154,17 +107,17 @@ runs:
         cd ${GITHUB_ACTION_PATH}/TWRP
         set +e
         source build/envsetup.sh
-        set -e
 
-        export BUILDLOG=$(realpath ./build.log)
-        export OUT=$(realpath ./out/target/product/$CODENAME)
         export DEVICE=$(grep "PRODUCT_MODEL :=" ./$DEVICE_PATH/twrp_$CODENAME.mk -m 1 | cut -d = -f 2)
+        export CODENAME=$(grep "PRODUCT_DEVICE :=" ./$DEVICE_PATH/twrp_$CODENAME.mk -m 1 | cut -d = -f 2)
+        export BUILD_LOG=$(realpath ./build.log)
+        export OUT=$(realpath ./out/target/product/$CODENAME)
 
         lunch twrp_$CODENAME-eng
         sleep 5
         build_message "Building... 🛠️"
         _BUILD_TARGET=$(echo "$BUILD_TARGET" | tr -d '_')
-        mka adbd ${_BUILD_TARGET}image -j$(nproc --all) 2>&1 | tee -a ${BUILDLOG}
+        mka adbd ${_BUILD_TARGET}image -j$(nproc --all) 2>&1 | tee -a ${BUILD_LOG}
         export retVal=${PIPESTATUS[0]}
         timeEnd
         buildStatus

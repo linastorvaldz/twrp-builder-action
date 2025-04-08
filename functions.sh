@@ -105,7 +105,7 @@ buildStatus() {
     if [[ $retVal -ne 0 ]]; then
         build_message "❌ Build Failed after $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds."
         sleep 1
-        tg_send_document --chat_id "$TG_CHAT_ID" --document "$BUILDLOG" --reply_to_message_id "$CI_MESSAGE_ID"
+        tg_send_document --chat_id "$TG_CHAT_ID" --document "$BUILD_LOG" --reply_to_message_id "$CI_MESSAGE_ID"
         exit $retVal
     fi
     build_message "Build success ✅"
